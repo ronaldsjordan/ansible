@@ -1,0 +1,35 @@
+---
+ - hosts: ubuntu
+   vars:
+     - ansible_password: $6$z0CkXvemSCELY$9A2X9ILisj1G0/OS7yNW.FR.hKINXzdDvrbRlaDRavxIA2IH04R6aM.TOPjjkUBBDVXkalApUbn6LyeTXjelH.
+   gather_facts: false
+   #remote_user: rjordan
+   #become: true
+
+   tasks:
+     - name: Add ansible user
+       user:
+         name: ansible
+         state: present
+         password: "{{ ansible_password }}"
+       become: true
+                  
+     - name: Add ansible users to sudoers
+       copy:
+         dest: "/etc/sudoers.d/ansible"
+         content: "ansible  ALL=(ALL)  NOPASSWD: ALL"
+       become: true
+
+     - name: Deploy SSH Key
+       authorized_key:
+         user: ansible
+         state: present
+         key: "{{ lookup('file', '/home/ansible/.ssh/id_rsa.pub') }}"
+       become: true
+
+   handlers:
+     - name: Restart SSH
+       service:
+         name: sshd
+         state: restarted
+
